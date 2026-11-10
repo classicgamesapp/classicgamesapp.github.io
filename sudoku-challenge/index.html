@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sudoku challenge: can you beat my time?</title>
+<meta name="description" content="A friend sent you a Sudoku. Same puzzle, same clues. See who solves it faster.">
+<meta name="robots" content="noindex">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Sudoku challenge: can you beat my time?">
+<meta property="og:description" content="Same puzzle, same clues. Tap to play it.">
+<meta name="theme-color" content="#FFFFFF">
+<style>
+  :root{
+    --paper:#FFFFFF;
+    --ink:#000000;
+    --ink-soft:#4B5563;
+    --line-thin:#B8BFC9;
+    --line-thick:#4B5563;
+    --accent:#2660DE;
+    --accent-dark:#1D4FBE;
+    --accent-soft:#CFE0FC;
+    --grid-line:rgba(20,20,20,0.06);
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; min-height:100%; }
+  body{
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    padding:32px 24px;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size:28px 28px;
+    color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-text-size-adjust:100%;
+  }
+  main{ width:100%; max-width:380px; }
+
+  /* The one memorable element: a single 3x3 box with the move still to make. */
+  .box{
+    width:168px; height:168px;
+    display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
+    background:var(--paper);
+    border:3px solid var(--ink);
+    margin:0 0 30px;
+  }
+  .box span{
+    display:flex; align-items:center; justify-content:center;
+    border-right:1px solid var(--line-thin);
+    border-bottom:1px solid var(--line-thin);
+    font-family:Georgia, "Times New Roman", serif;
+    font-size:34px; line-height:1;
+  }
+  .box span:nth-child(3n){ border-right:0; }
+  .box span:nth-child(n+7){ border-bottom:0; }
+  .box span.open{ background:var(--accent-soft); box-shadow:inset 0 0 0 2px var(--accent); }
+
+  h1{
+    margin:0 0 10px;
+    font-family:Georgia, "Times New Roman", serif;
+    font-weight:700;
+    font-size:34px; line-height:1.12; letter-spacing:-0.01em;
+  }
+  p.lead{
+    margin:0 0 28px;
+    font-size:17px; line-height:1.5; color:var(--ink-soft);
+    max-width:32ch;
+  }
+
+  .play{
+    display:block; width:100%;
+    padding:17px 20px;
+    border-radius:14px;
+    background:var(--accent); color:#fff;
+    font-size:18px; font-weight:600; text-align:center; text-decoration:none;
+    box-shadow:0 6px 16px rgba(38,96,222,0.32);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .play:active{ background:var(--accent-dark); transform:translateY(1px); }
+  .play:focus-visible, .store:focus-visible{ outline:3px solid var(--ink); outline-offset:3px; }
+
+  .store{
+    display:inline-block; margin-top:18px;
+    font-size:15px; color:var(--accent-dark);
+  }
+  .note{ margin:18px 0 0; font-size:14px; line-height:1.45; color:var(--ink-soft); }
+  .note:empty{ display:none; }
+</style>
+</head>
+<body>
+<main>
+  <div class="box" aria-hidden="true">
+    <span>4</span><span></span><span>9</span>
+    <span></span><span class="open"></span><span>7</span>
+    <span>2</span><span>6</span><span></span>
+  </div>
+
+  <h1 id="title">You&rsquo;ve been challenged</h1>
+  <p class="lead" id="lead">A friend sent you a Sudoku. Same puzzle, same clues. See who solves it faster.</p>
+
+  <a class="play" id="playBtn" href="https://play.google.com/store/apps/details?id=com.maniarora.sudoku">Play the challenge</a>
+  <a class="store" id="storeLink" href="https://play.google.com/store/apps/details?id=com.maniarora.sudoku">Open Google Play instead</a>
+  <p class="note" id="note"></p>
+</main>
+
+<script>
+(function(){
+  var PACKAGE = "com.maniarora.sudoku";
+  var HOST    = "classicgamesapp.github.io";
+  var PATH    = "/sudoku-challenge/";
+
+  // The puzzle travels in ?sp=<code>. Same format the game reads.
+  var m    = location.search.match(/[?&]sp=([A-Za-z0-9_-]{20,})/);
+  var code = m ? m[1] : "";
+
+  // Where a phone WITHOUT the game ends up. The puzzle rides along in the
+  // Play install referrer; the game collects it on its first launch.
+  var play = "https://play.google.com/store/apps/details?id=" + PACKAGE;
+  if(code) play += "&referrer=" + encodeURIComponent("sp=" + code);
+
+  var isAndroid = /Android/i.test(navigator.userAgent);
+  var btn   = document.getElementById("playBtn");
+  var store = document.getElementById("storeLink");
+  var note  = document.getElementById("note");
+
+  store.href = play;
+
+  if(!code){
+    // Opened without a puzzle: just point people at the game.
+    document.getElementById("title").textContent = "Classic Sudoku";
+    document.getElementById("lead").textContent  = "A calm, clutter-free Sudoku for Android.";
+    btn.textContent = "Get it on Google Play";
+    btn.href = play;
+    store.style.display = "none";
+    return;
+  }
+
+  if(isAndroid){
+    // One tap: Chrome opens the game if it is installed, and falls back to
+    // the Play listing (with the puzzle attached) if it is not. Chrome only
+    // honours intent links from a tap, so this stays a button, not a redirect.
+    btn.href = "intent://" + HOST + PATH + "?sp=" + code +
+      "#Intent;scheme=https;package=" + PACKAGE +
+      ";S.browser_fallback_url=" + encodeURIComponent(play) + ";end";
+  } else {
+    btn.href = play;
+    note.textContent = "Sudoku is on Google Play for Android. Open this link on your Android phone to play the challenge.";
+  }
+})();
+</script>
+</body>
+</html>
