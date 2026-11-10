@@ -137,11 +137,11 @@
   // Sent back here because the game is not on this phone. Nothing leads to
   // Google Play from this page: the install link in the message does that.
   if(missing){
-   only("Install the game first", "Install the game with the Google Play link in the message, then tap the puzzle link again.");
+   only("Install the game first", "Install or update the game with the Google Play link in the message, then tap the puzzle link again.");
     return;
   }
   if(!isAndroid){
-    only("You\u2019ve been challenged", "Install the game with the Google Play link in the message, then tap the puzzle link again.");
+    only("You\u2019ve been challenged", "Install or update the game with the Google Play link in the message, then tap the puzzle link again.");
     return;
   }
 
