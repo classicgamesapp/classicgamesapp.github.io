@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.maniarora.sudoku",
+      "sha256_cert_fingerprints": [
+        "57:0F:98:AC:D5:CC:34:DA:1B:CE:43:95:ED:B6:1F:C7:45:65:C2:30:A0:BB:D4:8C:78:AB:40:D0:A5:0D:C5:86"
+      ]
+    }
+  }
+]
