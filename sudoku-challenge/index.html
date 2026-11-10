@@ -101,9 +101,8 @@
   <h1 id="title">You&rsquo;ve been challenged</h1>
   <p class="lead" id="lead">A friend sent you a Sudoku. Same puzzle, same clues. See who solves it faster.</p>
 
-  <a class="play" id="playBtn" href="https://play.google.com/store/apps/details?id=com.maniarora.sudoku">Play the challenge</a>
-  <a class="store" id="storeLink" href="https://play.google.com/store/apps/details?id=com.maniarora.sudoku">Open Google Play instead</a>
-  <p class="note" id="note"></p>
+  <a class="play" id="playBtn" href="#">Play the challenge</a>
+  <p class="note" id="note">Don&rsquo;t have the game yet? Install it with the Google Play link in the message first, then tap the puzzle link again.</p>
 </main>
 
 <script>
@@ -112,43 +111,48 @@
   var HOST    = "classicgamesapp.github.io";
   var PATH    = "/sudoku-challenge/";
 
-  // The puzzle travels in ?sp=<code>. Same format the game reads.
-  var m    = location.search.match(/[?&]sp=([A-Za-z0-9_-]{20,})/);
+  var q    = location.search;
+  var m    = q.match(/[?&]sp=([A-Za-z0-9_-]{20,})/);
   var code = m ? m[1] : "";
-
-  // Where a phone WITHOUT the game ends up. The puzzle rides along in the
-  // Play install referrer; the game collects it on its first launch.
-  var play = "https://play.google.com/store/apps/details?id=" + PACKAGE;
-  if(code) play += "&referrer=" + encodeURIComponent("sp=" + code);
-
+  var missing   = /[?&]app=missing(&|$)/.test(q);
   var isAndroid = /Android/i.test(navigator.userAgent);
+
+  var title = document.getElementById("title");
+  var lead  = document.getElementById("lead");
   var btn   = document.getElementById("playBtn");
-  var store = document.getElementById("storeLink");
   var note  = document.getElementById("note");
 
-  store.href = play;
+  function only(heading, text){
+    title.textContent = heading;
+    lead.textContent  = text;
+    btn.style.display  = "none";
+    note.style.display = "none";
+  }
 
+  // Opened without a puzzle in the link.
   if(!code){
-    // Opened without a puzzle: just point people at the game.
-    document.getElementById("title").textContent = "Classic Sudoku";
-    document.getElementById("lead").textContent  = "A calm, clutter-free Sudoku for Android.";
-    btn.textContent = "Get it on Google Play";
-    btn.href = play;
-    store.style.display = "none";
+    only("Classic Sudoku", "Tap a challenge link from a friend to play their puzzle.");
+    return;
+  }
+  // Sent back here because the game is not on this phone. Nothing leads to
+  // Google Play from this page: the install link in the message does that.
+  if(missing){
+    only("Install the game first", "The game isn\u2019t on this phone yet. Install it with the Google Play link in the message, then tap the puzzle link again.");
+    return;
+  }
+  if(!isAndroid){
+    only("You\u2019ve been challenged", "This challenge opens in the Sudoku game on Android. Open the link on your Android phone.");
     return;
   }
 
-  if(isAndroid){
-    // One tap: Chrome opens the game if it is installed, and falls back to
-    // the Play listing (with the puzzle attached) if it is not. Chrome only
-    // honours intent links from a tap, so this stays a button, not a redirect.
-    btn.href = "intent://" + HOST + PATH + "?sp=" + code +
-      "#Intent;scheme=https;package=" + PACKAGE +
-      ";S.browser_fallback_url=" + encodeURIComponent(play) + ";end";
-  } else {
-    btn.href = play;
-    note.textContent = "Sudoku is on Google Play for Android. Open this link on your Android phone to play the challenge.";
-  }
+  // One tap: Chrome opens the game if it is installed. If it is not, Chrome
+  // loads the fallback below, which is this same page in its "install first"
+  // state, so a missing game never ends up on the Play listing from here.
+  // Chrome only honours intent links from a tap, so this stays a button.
+  var back = "https://" + HOST + PATH + "?sp=" + code + "&app=missing";
+  btn.href = "intent://" + HOST + PATH + "?sp=" + code +
+    "#Intent;scheme=https;package=" + PACKAGE +
+    ";S.browser_fallback_url=" + encodeURIComponent(back) + ";end";
 })();
 </script>
 </body>
